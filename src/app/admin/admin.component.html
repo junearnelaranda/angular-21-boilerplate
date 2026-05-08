@@ -1,0 +1,77 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Admin account management</h1>
+  <button class="btn btn-outline-secondary btn-sm" type="button" (click)="loadAccounts()">Refresh</button>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="table-responsive">
+        <table class="table table-striped mb-0">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let account of accounts">
+              <td>{{ account.title }} {{ account.firstName }} {{ account.lastName }}</td>
+              <td>{{ account.email }}</td>
+              <td>{{ account.role }}</td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-primary me-2" type="button" (click)="edit(account)">Edit</button>
+                <button class="btn btn-sm btn-outline-danger" type="button" (click)="delete(account)" [disabled]="account.id === currentAccountId">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card" *ngIf="selected">
+      <div class="card-body">
+        <h2 class="h5 mb-3">Edit account</h2>
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label" for="title">Title</label>
+              <select class="form-select" id="title" formControlName="title">
+                <option>Mr</option>
+                <option>Ms</option>
+                <option>Mrs</option>
+                <option>Dr</option>
+              </select>
+            </div>
+            <div class="col-md-8">
+              <label class="form-label" for="role">Role</label>
+              <select class="form-select" id="role" formControlName="role">
+                <option [value]="role.Admin">Admin</option>
+                <option [value]="role.User">User</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="firstName">First name</label>
+              <input class="form-control" id="firstName" formControlName="firstName">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="lastName">Last name</label>
+              <input class="form-control" id="lastName" formControlName="lastName">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="email">Email</label>
+              <input class="form-control" id="email" type="email" formControlName="email">
+            </div>
+          </div>
+          <button class="btn btn-primary mt-4" type="submit" [disabled]="form.invalid || loading">
+            {{ loading ? 'Saving...' : 'Save account' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
