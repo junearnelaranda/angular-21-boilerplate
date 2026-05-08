@@ -1,20 +1,24 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { catchError, throwError } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
-import { AccountService } from '@app/_services/account.service';
+import { AccountService } from '@app/_services';
 
-export const errorInterceptor: HttpInterceptorFn = (request, next) => {
-  const accountService = inject(AccountService);
+@Injectable()
+export class ErrorInterceptor implements HttpInterceptor {
+    constructor(private accountService: AccountService) { }
 
-  return next(request).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if ([401, 403].includes(error.status) && accountService.accountValue) {
-        accountService.logout();
-      }
+    intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+        return next.handle(request).pipe(catchError(err => {
+            if ([401, 403].includes(err.status) && this.accountService.accountValue) {
+                // auto logout if 401 or 403 response returned from api
+                this.accountService.logout();
+            }
 
-      const message = error.error?.message || error.statusText || 'Something went wrong';
-      return throwError(() => new Error(message));
-    })
-  );
-};
+            const error = (err && err.error && err.error.message) || err.statusText;
+            console.error(err);
+            return throwError(() => error);
+        }))
+    }
+}

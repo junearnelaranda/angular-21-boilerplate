@@ -1,80 +1,65 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { first } from 'rxjs/operators';
+import { Component, OnInit } from '@angular/core'; 
+import { Router, ActivatedRoute } from '@angular/router'; 
+import { FormBuilder, FormGroup, Validators } from '@angular/forms'; 
+import { first } from 'rxjs/operators'; 
 
-import { MustMatch } from '@app/_helpers';
-import { AccountService, AlertService } from '@app/_services';
+import { AccountService, AlertService } from '@app/_services'; 
+import { MustMatch } from '@app/_helpers'; 
 
-type RegisterForm = FormGroup<{
-  title: FormControl<string>;
-  firstName: FormControl<string>;
-  lastName: FormControl<string>;
-  email: FormControl<string>;
-  password: FormControl<string>;
-  confirmPassword: FormControl<string>;
-  acceptTerms: FormControl<boolean>;
-}>;
+@Component({ templateUrl: 'register.component.html', standalone: false }) 
+export class RegisterComponent implements OnInit { 
+    form!: FormGroup; 
+    submitting = false; 
+    submitted = false; 
 
-@Component({
-  imports: [ReactiveFormsModule, RouterLink],
-  templateUrl: './register.component.html'
-})
-export class RegisterComponent implements OnInit {
-  form!: RegisterForm;
-  submitting = false;
-  submitted = false;
+    constructor( 
+        private formBuilder: FormBuilder, 
+        private route: ActivatedRoute, 
+        private router: Router, 
+        private accountService: AccountService, 
+        private alertService: AlertService 
+    ) {} 
 
-  constructor(
-    private formBuilder: FormBuilder,
-    private route: ActivatedRoute,
-    private router: Router,
-    private accountService: AccountService,
-    private alertService: AlertService
-  ) { }
+    ngOnInit() { 
+        this.form = this.formBuilder.group({ 
+            title: ['', Validators.required], 
+            firstName: ['', Validators.required], 
+            lastName: ['', Validators.required], 
+            email: ['', [Validators.required, Validators.email]], 
+            password: ['', [Validators.required, Validators.minLength(6)]], 
+            confirmPassword: ['', Validators.required], 
+            acceptTerms: [false, Validators.requiredTrue] 
+        }, { 
+            validator: MustMatch('password', 'confirmPassword') 
+        }); 
+    } 
 
-  ngOnInit(): void {
-    this.form = this.formBuilder.nonNullable.group({
-      title: ['', Validators.required],
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required],
-      acceptTerms: [false, Validators.requiredTrue]
-    }, {
-      validators: MustMatch('password', 'confirmPassword')
-    });
-  }
+    // convenience getter for easy access to form fields 
+    get f() { return this.form.controls; } 
 
-  // convenience getter for easy access to form fields
-  get f() {
-    return this.form.controls;
-  }
+    onSubmit() { 
+        this.submitted = true; 
 
-  onSubmit(): void {
-    this.submitted = true;
+        // reset alerts on submit 
+        this.alertService.clear(); 
 
-    // reset alerts on submit
-    this.alertService.clear();
+        // stop here if form is invalid 
+        if (this.form.invalid) { 
+            return; 
+        } 
 
-    // stop here if form is invalid
-    if (this.form.invalid) {
-      return;
-    }
-
-    this.submitting = true;
-    this.accountService.register(this.form.getRawValue())
-      .pipe(first())
-      .subscribe({
-        next: () => {
-          this.alertService.success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true });
-          this.router.navigate(['../login'], { relativeTo: this.route });
-        },
-        error: error => {
-          this.alertService.error(error);
-          this.submitting = false;
-        }
-      });
-  }
+        this.submitting = true; 
+        this.accountService.register(this.form.value) 
+            .pipe(first()) 
+            .subscribe({ 
+                next: () => { 
+                    this.alertService.success('Registration successful, please check your email for verification instructions', { keepAfterRouteChange: true }); 
+                    this.router.navigate(['../login'], { relativeTo: this.route }); 
+                }, 
+                error: error => { 
+                    this.alertService.error(error); 
+                    this.submitting = false; 
+                } 
+            }); 
+    } 
 }
