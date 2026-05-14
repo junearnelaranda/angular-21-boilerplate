@@ -13,7 +13,6 @@ import { appInitializer } from './_helpers/app.initializer';
 import { AccountService } from './_services'; 
 import { AppComponent } from './app.component'; 
 import { AlertComponent } from './_components'; 
-import { HomeComponent } from './home'; 
 
 @NgModule({ 
     imports: [ 
@@ -24,8 +23,7 @@ import { HomeComponent } from './home';
     ], 
     declarations: [ 
         AppComponent, 
-        AlertComponent, 
-        HomeComponent 
+        AlertComponent 
     ], 
     providers: [ 
         { provide: APP_INITIALIZER, useFactory: appInitializer, multi: true, deps: [AccountService] }, 
@@ -33,7 +31,7 @@ import { HomeComponent } from './home';
         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true }, 
 
         // provider used to create fake backend 
-        // fakeBackendProvider 
+        fakeBackendProvider 
     ], 
     bootstrap: [AppComponent] 
 }) 
