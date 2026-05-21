@@ -27,7 +27,7 @@ export class AccountService {
     this.account = this.accountSubject.asObservable();
     this.account$ = this.account;
 
-    if (account) {
+    if (account && !this.isPublicAccountPath()) {
       this.startRefreshTokenTimer();
     }
   }
@@ -144,5 +144,17 @@ export class AccountService {
     if (this.refreshTokenTimeout) {
       clearTimeout(this.refreshTokenTimeout);
     }
+  }
+
+  private isPublicAccountPath(): boolean {
+    const publicAccountPaths = [
+      '/account/login',
+      '/account/register',
+      '/account/forgot-password',
+      '/account/reset-password',
+      '/account/verify-email'
+    ];
+
+    return publicAccountPaths.some(path => window.location.pathname.startsWith(path));
   }
 }

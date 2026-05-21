@@ -9,8 +9,10 @@ export class LayoutComponent {
         private router: Router, 
         private accountService: AccountService 
     ) { 
-        // redirect to home if already logged in 
-        if (this.accountService.accountValue) { 
+        const publicTokenPath = this.router.url.startsWith('/account/reset-password') || this.router.url.startsWith('/account/verify-email');
+
+        // redirect to home if already logged in, except for token-based account pages
+        if (this.accountService.accountValue && !publicTokenPath) { 
             this.router.navigate(['/']); 
         } 
     } 

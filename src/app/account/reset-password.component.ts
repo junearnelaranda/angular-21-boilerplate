@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core'; 
 import { Router, ActivatedRoute } from '@angular/router'; 
 import { FormBuilder, FormGroup, Validators } from '@angular/forms'; 
-import { first } from 'rxjs/operators'; 
+import { of } from 'rxjs';
+import { catchError, first, timeout } from 'rxjs/operators'; 
 
 import { AccountService, AlertService } from '@app/_services'; 
 import { MustMatch } from '@app/_helpers'; 
@@ -37,19 +38,31 @@ export class ResetPasswordComponent implements OnInit {
             validator: MustMatch('password', 'confirmPassword') 
         }); 
 
-        const token = this.route.snapshot.queryParams['token']; 
+        const token = this.route.snapshot.queryParamMap.get('token'); 
+
+        if (!token) {
+            console.warn('Reset password token missing from URL');
+            this.tokenStatus = TokenStatus.Invalid;
+            return;
+        }
 
         // remove token from url to prevent http referer leakage 
         this.router.navigate([], { relativeTo: this.route, replaceUrl: true }); 
 
         this.accountService.validateResetToken(token) 
-            .pipe(first()) 
-            .subscribe({ 
-                next: () => { 
+            .pipe(
+                first(),
+                timeout(10000),
+                catchError(error => {
+                    console.error('Reset token validation failed:', error);
+                    return of(null);
+                })
+            ) 
+            .subscribe(result => { 
+                if (result) {
                     this.token = token; 
                     this.tokenStatus = TokenStatus.Valid; 
-                }, 
-                error: () => { 
+                } else {
                     this.tokenStatus = TokenStatus.Invalid; 
                 } 
             }); 
